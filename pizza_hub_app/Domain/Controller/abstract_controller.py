@@ -1,0 +1,132 @@
+import inspect
+import os
+from abc import ABC, abstractmethod
+from typing import TypeVar, Callable, Awaitable
+from django.core.exceptions import ObjectDoesNotExist
+from django.db.models.base import ModelBase
+from fastapi import Depends, HTTPException
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
+from fastapi.security import OAuth2AuthorizationCodeBearer
+from psycopg2 import IntegrityError
+from pydantic import BaseModel
+from pydantic import ValidationError
+from django.http.request import HttpRequest
+from pizza_hub_app.utils.logger.logger import AppLogger
+
+T = TypeVar("T")
+
+# Keycloak
+KEYCLOAK_SERVER_URL = os.getenv("KEYCLOAK_SERVER_URL")
+KEYCLOAK_REALM_NAME = os.getenv("KEYCLOAK_REALM_NAME")
+KEYCLOAK_CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID")
+KEYCLOAK_CLIENT_SECRET = os.getenv("KEYCLOAK_CLIENT_SECRET")
+KEYCLOAK_ADMIN_USERNAME = os.getenv("KEYCLOAK_ADMIN_USERNAME")
+KEYCLOAK_ADMIN_PASSWORD = os.getenv("KEYCLOAK_ADMIN_PASSWORD")
+
+logger = AppLogger(__name__)
+
+
+class AbstractController(ABC):
+    @abstractmethod
+    def configure_routes(self):
+        pass
+
+    @abstractmethod
+    def get_router(self):
+        pass
+
+    @staticmethod
+    def response(message: dict):
+        return JSONResponse(jsonable_encoder(message))
+
+    def success_response(self, success: bool):
+        return self.response({"success": success})
+
+    @staticmethod
+    def bad_request(detail):
+        return HTTPException(status_code=400, detail=str(detail))
+
+    @staticmethod
+    def unauthorized(detail):
+        if detail:
+            return HTTPException(status_code=401, detail=str(detail))
+        return HTTPException(status_code=401, detail="Invalid credentials")
+
+    @staticmethod
+    def forbidden():
+        return HTTPException(status_code=403, detail="Invalid role")
+
+    @staticmethod
+    def not_found(detail):
+        return HTTPException(status_code=404, detail=f"Not found: {str(detail)}")
+
+    @staticmethod
+    def conflict(detail):
+        return HTTPException(status_code=409, detail=f"Conflict: {str(detail)}")
+
+    @staticmethod
+    def internal_server_error(detail):
+        return HTTPException(status_code=500, detail=str(detail))
+
+    # @staticmethod
+    # def from_keycloak_error(error: KeycloakPostError):
+    #     status_code = error.response_code
+    #     detail = error.response_body
+
+    #     match status_code:
+    #         case 400:
+    #             return AbstractController.bad_request(detail)
+    #         case 401:
+    #             return AbstractController.unauthorized(detail)
+    #         case 403:
+    #             return AbstractController.forbidden()
+    #         case 404:
+    #             return AbstractController.not_found(detail)
+    #         case 409:
+    #             return AbstractController.conflict(detail)
+    #         case _:
+    #             return AbstractController.internal_server_error(detail)
+
+    async def execute_action(
+        self, action: Callable[[], Awaitable[T]], model=ModelBase or None, pydantic_model=BaseModel
+    ) -> Awaitable[T]:
+        async def wrapper():
+            try:
+                return await action()
+            except ValidationError as e:
+                logger.error(
+                    f"A Validation error occurred in {list(pydantic_model)} model. Error occurred in class: {self._get_class_name()} --> DETAIL: {str(e)}"
+                )
+                raise self.bad_request(e)
+            except ValueError as e:
+                raise self.bad_request(e)
+            except IntegrityError as e:
+                logger.error(
+                    f"An integrity occurred in {type(model)} model. Error occurred in class: {self._get_class_name()} --> DETAIL: {str(e)}"
+                )
+                raise self.bad_request(e)
+            except ObjectDoesNotExist as e:
+                logger.error(
+                    f"Object on {type(model)} model not found! Error occurred in class: {self._get_class_name()}"
+                )
+                raise self.not_found(e)
+            
+            except Exception as e:
+                logger.critical(
+                    f"Request Error not detected! Error occurred in class: {self._get_class_name()} --> DETAIL: {str(e)}"
+                )
+                raise self.internal_server_error(e)
+
+        return await wrapper()
+
+    def _get_class_name(self):
+        frame = inspect.currentframe()
+        outer_frames = inspect.getouterframes(frame)
+
+        for outer_frame in outer_frames:
+            if "self" in outer_frame.frame.f_locals:
+                instance = outer_frame.frame.f_locals["self"]
+                if isinstance(instance, AbstractController):
+                    return instance.__class__.__name__
+        return "Unknown"
