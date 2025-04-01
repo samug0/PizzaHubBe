@@ -16,14 +16,6 @@ from pizza_hub_app.utils.logger.logger import AppLogger
 
 T = TypeVar("T")
 
-# Keycloak
-KEYCLOAK_SERVER_URL = os.getenv("KEYCLOAK_SERVER_URL")
-KEYCLOAK_REALM_NAME = os.getenv("KEYCLOAK_REALM_NAME")
-KEYCLOAK_CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID")
-KEYCLOAK_CLIENT_SECRET = os.getenv("KEYCLOAK_CLIENT_SECRET")
-KEYCLOAK_ADMIN_USERNAME = os.getenv("KEYCLOAK_ADMIN_USERNAME")
-KEYCLOAK_ADMIN_PASSWORD = os.getenv("KEYCLOAK_ADMIN_PASSWORD")
-
 logger = AppLogger(__name__)
 
 

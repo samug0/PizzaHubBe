@@ -1,6 +1,7 @@
 from django.db import models
 from uuid import uuid4
 from django.contrib.postgres.fields import ArrayField
+from django.contrib.auth.hashers import make_password
 # Create your models here.
 
 
@@ -53,21 +54,26 @@ class Role(BaseModel):
 
 
 class User(BaseModel):
-    name = models.CharField(max_length=30, null=True)
-    last_name = models.CharField(max_length=30, null=True)
+    name = models.CharField(max_length=30, null=True, blank=True)
+    last_name = models.CharField(max_length=30, null=True, blank=True)
     email = models.EmailField(unique=True, max_length=254)
-    username = models.CharField(unique=True, max_length=14, default=None)
-    city = models.CharField(max_length=50, null=True)
-    status = models.CharField(choices=UserStatus, default=UserStatus.CREATED, max_length=30)
+    username = models.CharField(unique=True, max_length=14, default=None, blank=True)
+    city = models.CharField(max_length=50, null=True, blank=True)
+    refresh_token = models.CharField(unique=True, null=True, default=None, max_length=300, blank=True)
+    status = models.CharField(choices=UserStatus, default=UserStatus.CREATED, max_length=30, blank=True)
     password = models.CharField(max_length=150)
-    phone_number = models.CharField(max_length=14, null=True)
-    country = models.CharField(max_length=50, null=True)
-    address = models.CharField(max_length=50, null=True)
-    city = models.CharField(max_length=50, null=True)
+    phone_number = models.CharField(max_length=14, null=True, blank=True)
+    country = models.CharField(max_length=50, null=True, blank=True)
+    address = models.CharField(max_length=50, null=True, blank=True)
+    city = models.CharField(max_length=50, null=True, blank=True)
     profile_image = models.ImageField(upload_to="upload_user_image/", null=True, blank=True)
-    email_verified_at = models.DateTimeField(null=True)
-    phone_verified_at = models.DateTimeField(null=True)
+    email_verified_at = models.DateTimeField(null=True, blank=True)
+    phone_verified_at = models.DateTimeField(null=True, blank=True)
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
+
+    def save(self, *args, **kwargs):
+        self.password = make_password(self.password)
+        super(User, self).save(*args, **kwargs)
 
     class Meta:
         db_table = "User"
