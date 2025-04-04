@@ -1,18 +1,27 @@
+import base64
 import inspect
+import json
 import os
+from jose import jwt
+from jose import JWTError
 from abc import ABC, abstractmethod
-from typing import TypeVar, Callable, Awaitable
+from typing import Optional, TypeVar, Callable, Awaitable
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.base import ModelBase
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Request, Security, status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
-from fastapi.security import OAuth2AuthorizationCodeBearer
 from psycopg2 import IntegrityError
 from pydantic import BaseModel
 from pydantic import ValidationError
 from django.http.request import HttpRequest
 from pizza_hub_app.utils.logger.logger import AppLogger
+from pizza_hub_app.utils.shared.token_extractor import TokenExtractor
+import os
+from fastapi.security import HTTPBearer
+from typing import List
+from pizza_hub_app.Domain.Controller.Auth.DTO.request.request import SignInRequestDTO
+
 
 T = TypeVar("T")
 
@@ -61,24 +70,9 @@ class AbstractController(ABC):
     def internal_server_error(detail):
         return HTTPException(status_code=500, detail=str(detail))
 
-    # @staticmethod
-    # def from_keycloak_error(error: KeycloakPostError):
-    #     status_code = error.response_code
-    #     detail = error.response_body
+    
 
-    #     match status_code:
-    #         case 400:
-    #             return AbstractController.bad_request(detail)
-    #         case 401:
-    #             return AbstractController.unauthorized(detail)
-    #         case 403:
-    #             return AbstractController.forbidden()
-    #         case 404:
-    #             return AbstractController.not_found(detail)
-    #         case 409:
-    #             return AbstractController.conflict(detail)
-    #         case _:
-    #             return AbstractController.internal_server_error(detail)
+    
 
     async def execute_action(
         self, action: Callable[[], Awaitable[T]], model=ModelBase or None, pydantic_model=BaseModel
@@ -88,19 +82,19 @@ class AbstractController(ABC):
                 return await action()
             except ValidationError as e:
                 logger.error(
-                    f"A Validation error occurred in {list(pydantic_model)} model. Error occurred in class: {self._get_class_name()} --> DETAIL: {str(e)}"
+                    f"A Validation error occurred in {pydantic_model} model. Error occurred in class: {self._get_class_name()} --> DETAIL: {str(e)}"
                 )
                 raise self.bad_request(e)
             except ValueError as e:
                 raise self.bad_request(e)
             except IntegrityError as e:
                 logger.error(
-                    f"An integrity occurred in {type(model)} model. Error occurred in class: {self._get_class_name()} --> DETAIL: {str(e)}"
+                    f"An integrity occurred in {model} model. Error occurred in class: {self._get_class_name()} --> DETAIL: {str(e)}"
                 )
                 raise self.bad_request(e)
             except ObjectDoesNotExist as e:
                 logger.error(
-                    f"Object on {type(model)} model not found! Error occurred in class: {self._get_class_name()}"
+                    f"Object on {model} model not found! Error occurred in class: {self._get_class_name()}"
                 )
                 raise self.not_found(e)
             
@@ -122,3 +116,5 @@ class AbstractController(ABC):
                 if isinstance(instance, AbstractController):
                     return instance.__class__.__name__
         return "Unknown"
+            
+

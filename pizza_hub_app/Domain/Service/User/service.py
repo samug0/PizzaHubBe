@@ -7,11 +7,13 @@ from pizza_hub_app.Domain.Controller.User.DTO.response.response import UserRespo
 from pizza_hub_app.Domain.Service.abstract_service import AbstractService
 from pizza_hub_app.utils.logger.logger import AppLogger
 from pizza_hub_app.models import User
+from fastapi.exceptions import HTTPException
 
 logger = AppLogger(__name__)
 
 
 class UserService(AbstractService):
+
 
 
     async def get_all_users(self) -> List[UserResponseDTO]:
@@ -21,9 +23,15 @@ class UserService(AbstractService):
     async def get_user_by_email(self, email : EmailStr) -> Optional[User]:
         return await self.repository_accessor.user_repository.get_by_email(email)
     
-        
     
     async def get_user_by_username(self, username : str) -> Optional[User]:
         return await self.repository_accessor.user_repository.get_by_username(username)
     
+
+    async def get_user_by_refresh_token(self, refresh_token: str) -> Optional[User]:
+        return await self.repository_accessor.user_repository.get_by_refresh_token(refresh_token)
+    
+
+    async def get_user_by_email_or_username(self, email_or_username : str) -> Optional[User]:
+        return await self.repository_accessor.user_repository.get_user_by_email_or_username(email_or_username)
     
