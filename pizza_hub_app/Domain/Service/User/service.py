@@ -4,6 +4,7 @@ from uuid import UUID
 from pydantic import EmailStr
 
 from pizza_hub_app.Domain.Controller.User.DTO.response.response import UserResponseDTO
+from pizza_hub_app.Domain.Controller.User.DTO.request.request import UpdateUserRequestDTO
 from pizza_hub_app.Domain.Service.abstract_service import AbstractService
 from pizza_hub_app.utils.logger.logger import AppLogger
 from pizza_hub_app.models import User
@@ -34,6 +35,20 @@ class UserService(AbstractService):
 
     async def get_user_by_email_or_username(self, email_or_username : str) -> Optional[User]:
         return await self.repository_accessor.user_repository.get_user_by_email_or_username(email_or_username)
+    
+
+    async def get_user_by_id(self, id: UUID) -> Optional[User]:
+        user : User = await self.repository_accessor.user_repository.get_by_id(id)
+        if user:
+            return UserResponseDTO(**user.__dict__)
+        else:
+            raise HTTPException(404, 'Not found')
+        
+
+    async def update_user_by_id(self, id: UUID, request : UpdateUserRequestDTO) -> bool:
+        validated_data : dict = UpdateUserRequestDTO(**request.model_dump()).__dict__
+        return await self.repository_accessor.user_repository.update(id, validated_data)
+
     
     
     

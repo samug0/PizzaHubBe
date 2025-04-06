@@ -84,7 +84,7 @@ class User(BaseModel):
 
 
 class BlackListToken(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.PROTECT)
     token = models.CharField(unique=True, blank=False, null=False, default=None)
     is_valid = models.BooleanField(default=False)
     expires_at = models.DateTimeField(default=None, blank=False, null=False)
@@ -100,7 +100,7 @@ class BlackListToken(BaseModel):
 
 
 class Cart(BaseModel):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.PROTECT)
 
     class Meta:
         db_table = "Carts"
@@ -140,7 +140,7 @@ class CartProduct(BaseModel):
 
 
 class Order(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.PROTECT)
     total = models.FloatField()
     approved = models.BooleanField(default=False)
     preparation_estimata = models.DateTimeField(null=True)
@@ -155,8 +155,8 @@ class Order(BaseModel):
         return f'Ordine utente "{self.user.email}"'
 
 class OrderProduct(BaseModel):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.PROTECT)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
 
 
     class Meta:
@@ -168,8 +168,8 @@ class OrderProduct(BaseModel):
 
 
 class Payments(BaseModel):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.PROTECT)
+    user = models.ForeignKey(User, on_delete=models.PROTECT)
     total = models.FloatField()
     status = models.CharField(choices=PaymentStatus, default=PaymentStatus.PENDING, max_length=30)
     type = models.CharField(choices=PaymentType, default=PaymentType.ONLINE, max_length=30)
@@ -183,8 +183,8 @@ class Payments(BaseModel):
 
 
 class ProductPayment(BaseModel):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    payment = models.ForeignKey(Payments, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    payment = models.ForeignKey(Payments, on_delete=models.PROTECT)
 
     class Meta:
         db_table = "ProductPaymets"
@@ -233,8 +233,8 @@ class ProductCategory(BaseModel):
 
 
 class CartProductExtra(BaseModel):
-    additional_product = models.ForeignKey(AdditionalProduct, on_delete=models.CASCADE)
-    cart_product = models.ForeignKey(CartProduct, on_delete=models.CASCADE)
+    additional_product = models.ForeignKey(AdditionalProduct, on_delete=models.PROTECT)
+    cart_product = models.ForeignKey(CartProduct, on_delete=models.PROTECT)
 
     class Meta:
         db_table = "CartProductExtra"
