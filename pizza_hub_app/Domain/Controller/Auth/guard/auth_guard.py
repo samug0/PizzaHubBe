@@ -18,7 +18,6 @@ class AuthGuard:
                 status_code=status.HTTP_401_UNAUTHORIZED, 
                 detail="Unauthorized"
             )
-
         jwt_secret = os.getenv('JWT_SECRET_KEY_ACCESS', 'X9@Lq8^pM2B!R0YV7&WZJ5TQmF3Ko6D*')
         jwt_algorithm = os.getenv('JWT_ALGORITHM', 'HS256')
 
@@ -39,7 +38,6 @@ class AuthGuard:
             raise HTTPException(status_code=401, detail="Token expired")
         # Controllo dei ruoli
         user_roles = payload.get("role", [])
-
         if self.roles and not any(role in user_roles for role in self.roles):
             raise HTTPException(status_code=403, detail="Forbidden")
         return payload  # Ritorna il payload del token

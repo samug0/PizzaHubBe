@@ -28,3 +28,12 @@ class RefreshRequestDTO(BaseModel):
 
 class MeRequestDTO(BaseModel):
     refresh_token : str
+
+
+class ForgotPasswordRequestDTO(BaseModel):
+    email : EmailStr
+
+
+class ResetPasswordRequestDTO(BaseModel):
+    password : Annotated[str, Field(min_length=4, max_length=20)]
+    token : str

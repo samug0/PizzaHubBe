@@ -1,5 +1,5 @@
 from django.contrib import admin
-from pizza_hub_app.models import User, Role
+from pizza_hub_app.models import User, Role, BlackListToken
 
 
 # Registration of User Entity
@@ -26,3 +26,14 @@ class RoleAdmin(admin.ModelAdmin):
 
     # Campi non editabili
     readonly_fields = ["id", "created_at", "updated_at"]
+
+
+@admin.register(BlackListToken)
+class BlackListTokenAdmin(admin.ModelAdmin):
+    list_display = [
+       "id", "user","token", "expires_at", "is_valid", "created_at", "updated_at"
+    ]
+    list_per_page = 20
+
+    # Campi non editabili
+    readonly_fields = [  "id", "user","token", "expires_at", "is_valid", "created_at", "updated_at"]

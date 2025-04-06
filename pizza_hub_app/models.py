@@ -83,6 +83,22 @@ class User(BaseModel):
         return f'Utente "{self.email}"'
 
 
+class BlackListToken(BaseModel):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token = models.CharField(unique=True, blank=False, null=False, default=None)
+    is_valid = models.BooleanField(default=False)
+    expires_at = models.DateTimeField(default=None, blank=False, null=False)
+
+    class Meta:
+        db_table = "BlackListedToken"
+        verbose_name_plural = "BlackListedTokens"
+
+    def __str__(self) -> str:
+        return f'Token Utente "{self.user.email}"'
+
+
+
+
 class Cart(BaseModel):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
 

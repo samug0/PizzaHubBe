@@ -4,8 +4,9 @@ import json
 import time
 from typing import List, Optional
 from fastapi import Request
+from pizza_hub_app.Domain.Service.BlackListToken.service import BlackListTokenService
 from pizza_hub_app.Domain.Service.abstract_service import AbstractService
-from pizza_hub_app.Domain.Controller.Auth.DTO.request.request import MeRequestDTO, SignInRequestDTO, SignUpRequestDTO, SignOutRequestDTO, RefreshRequestDTO
+from pizza_hub_app.Domain.Controller.Auth.DTO.request.request import SignInRequestDTO, SignUpRequestDTO, SignOutRequestDTO, RefreshRequestDTO, ForgotPasswordRequestDTO, ResetPasswordRequestDTO
 from pizza_hub_app.Domain.Controller.Auth.DTO.response.response import SignInResponseDTO, RefreshResponseDTO, MeResponseDTO
 from pizza_hub_app.Domain.Service.User.service import UserService
 from pizza_hub_app.utils.logger.logger import AppLogger
@@ -19,6 +20,8 @@ from pizza_hub_app.models import Role, RoleType, User, UserStatus
 from asgiref.sync import sync_to_async
 from django.core.exceptions import ObjectDoesNotExist
 from pizza_hub_app.utils.shared.token_extractor import TokenExtractor
+from validate_email import validate_email
+from pizza_hub_app.utils.shared.email_sender import EmailSender
 
 
 logger = AppLogger(__name__)
@@ -32,6 +35,7 @@ class AuthService(AbstractService):
     def __init__(self):
        super().__init__()
        self.__user_service = UserService()
+       self.__black_list_service = BlackListTokenService()
 
     async def sign_in(self, req : SignInRequestDTO):
         validated_data : dict = SignInRequestDTO(**req.model_dump()).__dict__
@@ -44,10 +48,11 @@ class AuthService(AbstractService):
         if user.status != UserStatus.ACTIVE:
             logger.error(f'User with email "{validated_data.get('email_or_username')}" has account not active!')
             raise HTTPException(401, 'Not Authorized')
-       
-        cripted_password = make_password(validated_data.get('password'))
-        #print('ciao', check_password(validated_data.get('password'), cripted_password))
-        if not check_password(validated_data.get('password'), cripted_password):
+        # cripted_password = make_password(validated_data.get('password'))
+        # #print('ciao', check_password(validated_data.get('password'), cripted_password))
+        # print(validated_data.get('password'), user.password)
+        # print(check_password(validated_data.get('password'), user.password))
+        if not check_password(validated_data.get('password'), user.password):
             logger.error(f'User with email "{validated_data.get('email_or_username')}" not authorized!')
             raise HTTPException(401, 'Not Authorized')
         else:
@@ -154,12 +159,10 @@ class AuthService(AbstractService):
             raise ObjectDoesNotExist()
     
 
-    async def me(self, request: MeRequestDTO) ->MeResponseDTO:
-        validated_data = MeRequestDTO(**request.model_dump()).__dict__
-        user : User = await self.repository_accessor.user_repository.get_by_refresh_token(validated_data.get('refresh_token'))
-        is_valid_refresh_token : bool =await self.validate_refresh_exp(validated_data.get('refresh_token'))
-        print(is_valid_refresh_token) 
-        if user and is_valid_refresh_token == True:
+    async def me(self, request: Request) ->MeResponseDTO:
+        user_id : str = await TokenExtractor.extract_user_id_from_request(request)
+        user : User = await self.repository_accessor.user_repository.get_by_id(user_id)
+        if user:
             role_name = await asyncio.get_running_loop().run_in_executor(None, lambda: user.role.name)
             user_data = {
                 'name': user.name,
@@ -178,4 +181,38 @@ class AuthService(AbstractService):
             return MeResponseDTO(**user_data)
         else:
             raise HTTPException(401, 'Unauthorized')
+        
+    
+    async def forgot_password(self, request: ForgotPasswordRequestDTO) -> bool:
+        validated_data : dict = ForgotPasswordRequestDTO(**request.model_dump()).__dict__
+        user : User = await self.__user_service.get_user_by_email(validated_data.get('email'))
+        await self.__black_list_service.revoke_all_valid_user_token_by_user_id(user.id)
+        token_and_expires: dict = await self.generate_short_token()
+        result_created_black_list_token : bool = await self.__black_list_service.create(token_and_expires.get('token'), token_and_expires.get('expires_at'), user)
+        if result_created_black_list_token == True:
+            email_sended : bool = await EmailSender.send_welcome_email(self, name=user.name, lastname=user.last_name, email=user.email, token=token_and_expires.get('token'))
+            return True if email_sended == True else False
+        # if user:
+        #     token = await 
 
+    async def reset_password(self, request: ResetPasswordRequestDTO) -> bool:
+        validated_data : dict = ResetPasswordRequestDTO(**request.model_dump()).__dict__
+        user = await self.__black_list_service.get_user_by_token(validated_data.get('token'))
+        if user:
+            print(validated_data.get('password'))
+            user.password = validated_data.get('password')
+            await user.asave()
+            await self.__black_list_service.revoke_all_valid_user_token_by_user_id(user.id)
+            return True
+        else:
+            raise HTTPException(401, 'Unauthorized')
+
+
+    @sync_to_async
+    def generate_short_token(self) -> dict:
+        expires_at_token = datetime.now(tz=pytz.utc) + timedelta(minutes=5)
+        expires_at_token_ms = int(expires_at_token.timestamp() * 1000)
+        payload_token = {'exp': expires_at_token_ms}
+        # print('ciao')
+        token = jwt.encode(payload_token, os.getenv('JET_SECRET_KEY_EMAIL', 'M0tqT2wXOcPN2nbM1dyXQl-Rrp2PLf5kAFYeyU4MC-E'), os.getenv('JWT_ALGORITHM', 'HS256'))
+        return {"token": token, "expires_at": expires_at_token_ms} 
