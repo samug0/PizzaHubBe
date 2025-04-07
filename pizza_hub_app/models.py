@@ -1,6 +1,7 @@
 from django.db import models
 from uuid import uuid4
 from django.contrib.postgres.fields import ArrayField
+from django.contrib.auth.hashers import make_password
 # Create your models here.
 
 
@@ -53,21 +54,26 @@ class Role(BaseModel):
 
 
 class User(BaseModel):
-    name = models.CharField(max_length=30, null=True)
-    last_name = models.CharField(max_length=30, null=True)
+    name = models.CharField(max_length=30, null=True, blank=True)
+    last_name = models.CharField(max_length=30, null=True, blank=True)
     email = models.EmailField(unique=True, max_length=254)
-    username = models.CharField(unique=True, max_length=14, default=None)
-    city = models.CharField(max_length=50, null=True)
-    status = models.CharField(choices=UserStatus, default=UserStatus.CREATED, max_length=30)
+    username = models.CharField(unique=True, max_length=14, default=None, blank=True)
+    city = models.CharField(max_length=50, null=True, blank=True)
+    refresh_token = models.CharField(unique=True, null=True, default=None, max_length=300, blank=True)
+    status = models.CharField(choices=UserStatus, default=UserStatus.CREATED, max_length=30, blank=True)
     password = models.CharField(max_length=150)
-    phone_number = models.CharField(max_length=14, null=True)
-    country = models.CharField(max_length=50, null=True)
-    address = models.CharField(max_length=50, null=True)
-    city = models.CharField(max_length=50, null=True)
+    phone_number = models.CharField(max_length=14, null=True, blank=True)
+    country = models.CharField(max_length=50, null=True, blank=True)
+    address = models.CharField(max_length=50, null=True, blank=True)
+    city = models.CharField(max_length=50, null=True, blank=True)
     profile_image = models.ImageField(upload_to="upload_user_image/", null=True, blank=True)
-    email_verified_at = models.DateTimeField(null=True)
-    phone_verified_at = models.DateTimeField(null=True)
+    email_verified_at = models.DateTimeField(null=True, blank=True)
+    phone_verified_at = models.DateTimeField(null=True, blank=True)
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
+
+    def save(self, *args, **kwargs):
+        self.password = make_password(self.password)
+        super(User, self).save(*args, **kwargs)
 
     class Meta:
         db_table = "User"
@@ -77,8 +83,24 @@ class User(BaseModel):
         return f'Utente "{self.email}"'
 
 
+class BlackListToken(BaseModel):
+    user = models.ForeignKey(User, on_delete=models.PROTECT)
+    token = models.CharField(unique=True, blank=False, null=False, default=None)
+    is_valid = models.BooleanField(default=False)
+    expires_at = models.DateTimeField(default=None, blank=False, null=False)
+
+    class Meta:
+        db_table = "BlackListedToken"
+        verbose_name_plural = "BlackListedTokens"
+
+    def __str__(self) -> str:
+        return f'Token Utente "{self.user.email}"'
+
+
+
+
 class Cart(BaseModel):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.PROTECT)
 
     class Meta:
         db_table = "Carts"
@@ -118,7 +140,7 @@ class CartProduct(BaseModel):
 
 
 class Order(BaseModel):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.PROTECT)
     total = models.FloatField()
     approved = models.BooleanField(default=False)
     preparation_estimata = models.DateTimeField(null=True)
@@ -133,8 +155,8 @@ class Order(BaseModel):
         return f'Ordine utente "{self.user.email}"'
 
 class OrderProduct(BaseModel):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.PROTECT)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
 
 
     class Meta:
@@ -146,8 +168,8 @@ class OrderProduct(BaseModel):
 
 
 class Payments(BaseModel):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.PROTECT)
+    user = models.ForeignKey(User, on_delete=models.PROTECT)
     total = models.FloatField()
     status = models.CharField(choices=PaymentStatus, default=PaymentStatus.PENDING, max_length=30)
     type = models.CharField(choices=PaymentType, default=PaymentType.ONLINE, max_length=30)
@@ -161,8 +183,8 @@ class Payments(BaseModel):
 
 
 class ProductPayment(BaseModel):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    payment = models.ForeignKey(Payments, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    payment = models.ForeignKey(Payments, on_delete=models.PROTECT)
 
     class Meta:
         db_table = "ProductPaymets"
@@ -211,8 +233,8 @@ class ProductCategory(BaseModel):
 
 
 class CartProductExtra(BaseModel):
-    additional_product = models.ForeignKey(AdditionalProduct, on_delete=models.CASCADE)
-    cart_product = models.ForeignKey(CartProduct, on_delete=models.CASCADE)
+    additional_product = models.ForeignKey(AdditionalProduct, on_delete=models.PROTECT)
+    cart_product = models.ForeignKey(CartProduct, on_delete=models.PROTECT)
 
     class Meta:
         db_table = "CartProductExtra"

@@ -1,0 +1,68 @@
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Newsletter</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 0; padding: 0;
+      background-color: #f4f4f4; } .email-section { background-image:
+      url("background.jpg"); background-size: cover; background-position:
+      center; padding: 40px 10px; } .container { max-width: 600px; margin: 0
+      auto; background-color: rgba(255, 255, 255, 0.9); padding: 40px 60px;
+      border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); } .logo_img {
+      width: 65%; margin: 0 auto 40px auto; display: block; } h1 { color: #333;
+      font-size: 24px; text-align: center; } p { color: #666; font-size: 16px;
+      line-height: 1.6; text-align: center; } .testimonial { border-left: 4px
+      solid #224d20; padding-left: 15px; margin: 50px 0; } .testimonial p {
+      text-align: left; } .footer p { font-size: 12px; color: #999; margin: 10px
+      0; text-align: center; } .footer a { color: #224d20; text-decoration:
+      none; } /* Responsive styles */ @media screen and (max-width: 600px) {
+      .container { padding: 15px; } h1 { font-size: 20px; } p { font-size: 14px;
+      } .testimonial { font-size: 14px; } }
+    </style>
+  </head>
+  <body>
+    <div class="email-section">
+      <div class="container">
+        <!-- Header -->
+        <div class="header">
+          {{! <img
+            class="logo_img"
+            src="https://diborgoinborgo.cloud/django/media/logo_newsletter.png"
+            alt="Logo App"
+          /> }}
+        </div>
+
+        <div class="intro">
+          <strong style="text-align: justify;">Ciao
+            {{name}}
+            {{lastname}}, clicca qui per resettare la tua password</strong>
+          <a>{{reset_password_link}}</a>
+        </div>
+        {{! <!-- Testimonial -->
+        <div class="testimonial">
+          <p>
+            "Grazie a <strong>DiBorgoInBorgo</strong>, riesco ad esplorare il
+            mio amato Molise divertendomi. È incredibile come questo tipo di
+            esplorazione mi abbia aiutato a scoprire il mio paesino!" –
+            <em>[Giorgia, Bojano]</em>
+          </p>
+        </div> }}
+
+        <!-- Footer -->
+        <div class="footer">
+          <p>Contatti: info@diborgoinborgo.cloud</p>
+          <p>
+            Seguici su:
+            <a
+              href="https://www.facebook.com/profile.php?id=61564446718529"
+            >Facebook</a>
+            |
+            <a href="https://www.instagram.com/di_borgo_in_borgo">Instagram</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
