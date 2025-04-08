@@ -42,18 +42,18 @@ class AuthService(AbstractService):
         user = await self.__user_service.get_user_by_email_or_username(validated_data.get('email_or_username'))
 
         if not user:
-            logger.error(f'User with email "{validated_data.get('email_or_username')}" not authorized!')
+            logger.error(f'User with email "{validated_data.get("email_or_username")}" not authorized!')
             raise HTTPException(401, 'Not Authorized')
         
         if user.status != UserStatus.ACTIVE:
-            logger.error(f'User with email "{validated_data.get('email_or_username')}" has account not active!')
+            logger.error(f'User with email "{validated_data.get("email_or_username")}" has account not active!')
             raise HTTPException(401, 'Not Authorized')
         # cripted_password = make_password(validated_data.get('password'))
         # #print('ciao', check_password(validated_data.get('password'), cripted_password))
         # print(validated_data.get('password'), user.password)
         # print(check_password(validated_data.get('password'), user.password))
         if not check_password(validated_data.get('password'), user.password):
-            logger.error(f'User with email "{validated_data.get('email_or_username')}" not authorized!')
+            logger.error(f'User with email "{validated_data.get("email_or_username")}" not authorized!')
             raise HTTPException(401, 'Not Authorized')
         else:
             expires_at_access = datetime.now(tz=pytz.utc) + timedelta(hours=1)

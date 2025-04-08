@@ -1,10 +1,10 @@
-version: '3.9'
+version: "3.9"
 
 services:
   web:
     build: .
-    container_name: django_app
-    command: uvicorn pizza_hub.asgi:application --host 0.0.0.0 --reload
+    container_name: pizza_hub_app
+    command: bash -c "python manage.py makemigrations && python manage.py migrate && uvicorn pizza_hub.asgi:django_app --host 0.0.0.0 --reload"
     ports:
       - "8000:8000"
     env_file:
@@ -19,7 +19,7 @@ services:
   db:
     image: postgres:15
     container_name: postgres_db
-    
+
     environment:
       POSTGRES_DB: pizza_hub
       POSTGRES_USER: postgres
@@ -33,7 +33,6 @@ services:
 
 volumes:
   postgres_data:
-
 
 networks:
   pizza_network:
