@@ -127,16 +127,31 @@ class Product(BaseModel):
 
 
 
-class CartProduct(BaseModel):
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+class Ingredients(BaseModel):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(max_length=1000, null=True)
+    price = models.FloatField()
+    is_available = models.BooleanField(default=True)
 
     class Meta:
-        db_table = "CardProducts"
-        verbose_name_plural = "CarrelloProdotto"
+        db_table = "Ingredients"
+        verbose_name_plural = "Ingredienti"
     
     def __str__(self) -> str:
-        return f'Carrello Prodotto "{self.id}"'
+        return f'Ingrediente "{self.name}"'
+
+
+class ProductIngredients(BaseModel):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(Ingredients, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "ProductIngredients"
+        verbose_name_plural = "Ingredienti Prodotto"
+    
+    def __str__(self) -> str:
+        return f'Prodotto Ingredienti "{self.product.name}"'
+
 
 
 class Order(BaseModel):
@@ -154,17 +169,55 @@ class Order(BaseModel):
     def __str__(self) -> str:
         return f'Ordine utente "{self.user.email}"'
 
-class OrderProduct(BaseModel):
-    order = models.ForeignKey(Order, on_delete=models.PROTECT)
-    product = models.ForeignKey(Product, on_delete=models.PROTECT)
 
+class ProductInstance(BaseModel):
+    product = models.ForeignKey(Product, on_delete=models.PROTECT)
+    order = models.ForeignKey(Order, on_delete=models.PROTECT)
+    total_price = models.FloatField()
 
     class Meta:
-        db_table = "OrderProducts"
-        verbose_name_plural = "Ordini Prodotto"
+        db_table = "ProductInstances"
+        verbose_name_plural = "Istanze Prodotti"
 
     def __str__(self) -> str:
-        return f'Ordine Prodotto "{self.id}"'
+        return f'Istanza prodotto ordine"{self.order.id}"'
+
+
+class ProductInstanceIngredients(BaseModel):
+    product_instance = models.ForeignKey(ProductInstance, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(Ingredients, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "ProductInstanceIngredients"
+        verbose_name_plural = "Istanze Prodotti Ingredienti"
+
+    def __str__(self) -> str:
+        return f'Istanza prodotto "{self.product_instance.id}"'
+
+
+class ProductImages(BaseModel):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    image = models.ImageField(upload_to="upload_product_image/")
+
+    class Meta:
+        db_table = "ProductImages"
+        verbose_name_plural = "Immagini Prodotto"
+
+    def __str__(self) -> str:
+        return f'Immagine prodotto "{self.product.name}"'
+
+
+
+class CartProductInstance(BaseModel):
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
+    product_instance = models.ForeignKey(ProductInstance, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "CartProductInstances"
+        verbose_name_plural = "CarrelloInstanzaProdotto"
+    
+    def __str__(self) -> str:
+        return f'Carrello Istanza Prodotto "{self.product_instance.id}"'
 
 
 class Payments(BaseModel):
@@ -194,19 +247,6 @@ class ProductPayment(BaseModel):
         return f'Carrello Prodotto "{self.id}"'
 
 
-class AdditionalProduct(BaseModel):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    name = models.CharField(max_length=150, unique=True)
-    price = models.FloatField()
-    description = models.TextField(max_length=1000, null=True)
-
-    class Meta:
-        db_table = "AdditionalProduct"
-        verbose_name_plural = "Prodotti Aggiungitvi"
-    
-    def __str__(self) -> str:
-        return f'Prodotto aggiuntivo "{self.name}"'
-
 
 class Category(BaseModel):
     name = models.CharField(unique=True, max_length=150)
@@ -232,15 +272,5 @@ class ProductCategory(BaseModel):
         return f'Categoria Prodotto "{self.id}"'
 
 
-class CartProductExtra(BaseModel):
-    additional_product = models.ForeignKey(AdditionalProduct, on_delete=models.PROTECT)
-    cart_product = models.ForeignKey(CartProduct, on_delete=models.PROTECT)
-
-    class Meta:
-        db_table = "CartProductExtra"
-        verbose_name_plural = "Prodotto carrello extra"
-    
-    def __str__(self) -> str:
-        return f'Prodotto carrello extra "{self.id}"'
 
 
