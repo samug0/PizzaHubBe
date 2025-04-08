@@ -13,7 +13,7 @@ class AppLogger:
         self.logger = logging.getLogger(name)
         self.logger.setLevel(level)
         # Definizione del path del file di log
-        log_filename = os.path.join(log_directory, f'app-log-{datetime.now().strftime('%Y-%m-%d')}.log')
+        log_filename = os.path.join(log_directory, f'app-log-{datetime.now().strftime("%Y-%m-%d")}.log')
         # Creazione e configurazione dell'handler
         handler = logging.FileHandler(log_filename, mode='a', encoding='utf-8')
         formatter = logging.Formatter('%(asctime)s %(levelname)-8s %(name)-15s [PID:%(process)d TID:%(thread)d] %(message)s')
