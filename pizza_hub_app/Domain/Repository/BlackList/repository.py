@@ -7,7 +7,7 @@ from datetime import datetime
 from django.utils import timezone
 
 
-class BalckListTokenRepository(GenericRepository[BlackListToken]):
+class BlackListTokenRepository(GenericRepository[BlackListToken]):
 
     async def get_user_by_token(self, token : str) -> Optional[User]:
         blackListedToken : BlackListToken = await BlackListToken.objects.aget(token=token)
