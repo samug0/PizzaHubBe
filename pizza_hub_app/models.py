@@ -250,7 +250,7 @@ class ProductPayment(BaseModel):
 
 class Category(BaseModel):
     name = models.CharField(unique=True, max_length=150)
-    desription = models.TextField(max_length=1000, null=True)
+    description = models.TextField(max_length=1000, null=True)
 
     class Meta:
         db_table = "Category"
