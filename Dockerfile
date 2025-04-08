@@ -24,8 +24,8 @@ RUN python manage.py collectstatic --noinput
 # Expose port
 EXPOSE 8000
 
-#RUN python manage.py makemigrations
-#RUN python manage.py migrate
-#RUN python manage.py shell -c "from django.contrib.auth.models import User; User.objects.create_superuser('prozio', 'email@example.com', 'ciao123')"
+RUN python manage.py makemigrations
+RUN python manage.py migrate
+RUN python manage.py shell -c "from django.contrib.auth.models import User; User.objects.create_superuser('prozio', 'email@example.com', 'ciao123')"
 #Start Django via Daphne (ASGI)
-#CMD ["uvicorn", "pizza_hub.asgi:django_app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "pizza_hub.asgi:django_app", "--host", "0.0.0.0", "--port", "8000"]
