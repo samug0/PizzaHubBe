@@ -8,7 +8,9 @@ class ProductResponseDTO(BaseModel):
     name : str
     price : float
     description : Optional[str]
-    ingredients : Optional[List[str]]
+    images : List[dict] | None
+    product_categories : List[dict] | None
+    ingredients: List[dict] | None
     is_available : bool
     created_at : datetime
     updated_at : datetime
