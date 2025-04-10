@@ -114,8 +114,7 @@ class Cart(BaseModel):
 class Product(BaseModel):
     name = models.CharField(max_length=250, unique=True)
     price = models.FloatField()
-    ingredients = ArrayField(models.CharField(null=True, max_length=50), null=True)
-    description = models.TextField(max_length=1000, null=True)
+    description = models.TextField(max_length=1000, null=True, blank=True)
     is_available = models.BooleanField(default=True)
 
     class Meta:
@@ -129,7 +128,7 @@ class Product(BaseModel):
 
 class Ingredients(BaseModel):
     name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(max_length=1000, null=True)
+    description = models.TextField(max_length=1000, null=True, blank=True)
     price = models.FloatField()
     is_available = models.BooleanField(default=True)
 
@@ -142,7 +141,7 @@ class Ingredients(BaseModel):
 
 
 class ProductIngredients(BaseModel):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="product_ingredients")
     ingredient = models.ForeignKey(Ingredients, on_delete=models.CASCADE)
 
     class Meta:
@@ -196,7 +195,7 @@ class ProductInstanceIngredients(BaseModel):
 
 
 class ProductImages(BaseModel):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="product_images")
     image = models.ImageField(upload_to="upload_product_image/")
 
     class Meta:
@@ -235,22 +234,10 @@ class Payments(BaseModel):
         return f'Pagamento Utente "{self.user.email}"'
 
 
-class ProductPayment(BaseModel):
-    product = models.ForeignKey(Product, on_delete=models.PROTECT)
-    payment = models.ForeignKey(Payments, on_delete=models.PROTECT)
-
-    class Meta:
-        db_table = "ProductPaymets"
-        verbose_name_plural = "Pagamento Prodotti"
-    
-    def __str__(self) -> str:
-        return f'Carrello Prodotto "{self.id}"'
-
-
 
 class Category(BaseModel):
     name = models.CharField(unique=True, max_length=150)
-    description = models.TextField(max_length=1000, null=True)
+    description = models.TextField(max_length=1000, null=True, blank=True)
 
     class Meta:
         db_table = "Category"
@@ -261,7 +248,7 @@ class Category(BaseModel):
 
 
 class ProductCategory(BaseModel):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="product_category")
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
 
     class Meta:

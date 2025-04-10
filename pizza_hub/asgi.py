@@ -8,12 +8,14 @@ https://docs.djangoproject.com/en/5.0/howto/deployment/asgi/
 """
 import os
 import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pizza_hub.settings")
+django.setup()
+
 from fastapi.middleware.cors import CORSMiddleware
 
 # configuration before mounting fastapi in django
 # set app in django settings
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pizza_hub.settings")
-django.setup()
 
 from django.core.asgi import get_asgi_application
 from fastapi import FastAPI
