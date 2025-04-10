@@ -79,8 +79,8 @@ DATABASES = {
    "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.getenv("DB_NAME", 'pizza_hub'),
-        "USER": os.getenv("DB_USER", 'postgres'),
-        "PASSWORD": os.getenv("DB_PASSWORD", 'postgres'),
+        "USER": os.getenv("DB_USER", 'pizza_hub_user'),
+        "PASSWORD": os.getenv("DB_PASSWORD", 'Fa4IhTZxAAh4AmMB8d4DdTLpSMHYio5C'),
         "HOST": os.getenv("DB_HOST", 'dpg-cvq6ofjipnbc73clbr40-a.oregon-postgres.render.com'),
         "PORT": os.getenv("DB_PORT", '5432'),
     },
