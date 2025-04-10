@@ -28,7 +28,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*", "https://pizzahubbe.onrender.com"]
 
-CSRF_TRUSTED_ORIGINS = ["*", "https://pizzahubbe.onrender.com"]
+CSRF_TRUSTED_ORIGINS = ["https://pizzahubbe.onrender.com"]
 
 CSRF_ALLOWED_ORIGINS = ["*", "https://pizzahubbe.onrender.com"]
 # Application definition
