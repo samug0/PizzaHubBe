@@ -26,9 +26,11 @@ SECRET_KEY = 'django-insecure-l!)s=9n%v4q4$%&lq+iz^!omv(&%i2i5=!!s8r9*ofha-%8*17
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ["*", "https://pizzahubbe.onrender.com"]
 
+CSRF_TRUSTED_ORIGINS = ["*", "https://pizzahubbe.onrender.com"]
 
+CSRF_ALLOWED_ORIGINS = ["*", "https://pizzahubbe.onrender.com"]
 # Application definition
 
 INSTALLED_APPS = [
