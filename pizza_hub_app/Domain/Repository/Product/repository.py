@@ -1,7 +1,7 @@
-from typing import List
+from typing import List, Optional
 from pizza_hub_app.Domain.Repository.generic_repository import GenericRepository
 from pizza_hub_app.models import Product, ProductImages, ProductCategory, ProductIngredients
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 from pizza_hub_app.Domain.Repository.Product.assembler.assembler import convert_products_aggregated
 
 
@@ -22,10 +22,17 @@ class ProductRepository(GenericRepository[Product]):
 
 
 
-    async def get_products_aggregated(self, )->List[dict]:
+    async def get_products_aggregated(self, name = Optional[str])->List[dict]:
         """
         Get all products aggregated with their respective images and categories.
         """
         #products = await self.get_all()
-        products : List[Product] = [product async for product in Product.objects.prefetch_related(prefetched_images, prefetched_product_category, prefetched_product_ingredients).all()]
-        return await convert_products_aggregated(products)
+        print(name)
+        if(name and name != ''):
+            products : List[Product] = [product async for product in Product.objects.prefetch_related(prefetched_images, prefetched_product_category, prefetched_product_ingredients).filter(name__startswith=name)]
+            return await convert_products_aggregated(products)
+        else:
+            products : List[Product] = [product async for product in Product.objects.prefetch_related(prefetched_images, prefetched_product_category, prefetched_product_ingredients).all()]
+            return await convert_products_aggregated(products)
+    # async def get_filtered_by_name(self) -> List[dict]:
+    #     products : List[Product] = [product async for product in Product.objects.filter(name__startswith=).values()]

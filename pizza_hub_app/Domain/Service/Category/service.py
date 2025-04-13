@@ -12,6 +12,6 @@ class CategoryService(AbstractService):
         categorys : List[Category] = await self.repository_accessor.category_repository.get_all()
         categotys_parsed : List = []
         for i in categorys:
-            category_parsed : Category = {"id": i.id, "name": i.name, "price": i.desription, "created_at": i.created_at, "updated_at": i.updated_at}
+            category_parsed : Category = {"id": i.id, "name": i.name, "description": i.description, "created_at": i.created_at, "updated_at": i.updated_at}
             categotys_parsed.append(CategoryResponseDTO(**category_parsed))
         return categotys_parsed
