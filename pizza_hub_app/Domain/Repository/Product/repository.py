@@ -1,8 +1,9 @@
 from typing import List, Optional
+from uuid import UUID
 from pizza_hub_app.Domain.Repository.generic_repository import GenericRepository
 from pizza_hub_app.models import Product, ProductImages, ProductCategory, ProductIngredients
 from django.db.models import Prefetch, Q
-from pizza_hub_app.Domain.Repository.Product.assembler.assembler import convert_products_aggregated
+from pizza_hub_app.Domain.Repository.Product.assembler.assembler import convert_products_aggregated, convert_product_aggregated
 
 
 
@@ -36,3 +37,9 @@ class ProductRepository(GenericRepository[Product]):
             return await convert_products_aggregated(products)
     # async def get_filtered_by_name(self) -> List[dict]:
     #     products : List[Product] = [product async for product in Product.objects.filter(name__startswith=).values()]
+
+
+    async def getById(self, id : UUID) -> Optional[dict]:
+        product = await Product.objects.prefetch_related(prefetched_images, prefetched_product_category, prefetched_product_ingredients).aget(pk=id)
+        return await convert_product_aggregated(product)
+        

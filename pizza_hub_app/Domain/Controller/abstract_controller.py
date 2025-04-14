@@ -103,7 +103,10 @@ class AbstractController(ABC):
                     f"Request Error not detected! Error occurred in class: {self._get_class_name()} --> DETAIL: {str(e)}"
                 )
                 raise self.internal_server_error(e)
-
+            except HTTPException as e:
+                print('si')
+                if e.status_code == 404:
+                    logger.error(f"Class '{self._get_class_name}' not found")
         return await wrapper()
 
     def _get_class_name(self):
