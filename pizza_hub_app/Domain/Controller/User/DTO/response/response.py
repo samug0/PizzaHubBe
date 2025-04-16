@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 
 from pydantic import EmailStr
@@ -20,9 +20,20 @@ class UserResponseDTO(BaseModel):
     updated_at: datetime
 
 
+
+
+
+class ProductInstance(BaseModel):
+    id : UUID
+    product_id : UUID
+    total_price : int
+    created_at: datetime
+    updated_at: datetime
+
+
 class CartModel(BaseModel):
     id : UUID
-    user_id : UUID
+    product_instances : List[ProductInstance]
     created_at: datetime
     updated_at: datetime
 

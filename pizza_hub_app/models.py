@@ -184,8 +184,8 @@ class OrderProduct(BaseModel):
 
 
 class ProductInstanceIngredients(BaseModel):
-    product_instance = models.ForeignKey(ProductInstance, on_delete=models.PROTECT)
-    ingredient = models.ForeignKey(Ingredients, on_delete=models.PROTECT)
+    product_instance = models.ForeignKey(ProductInstance, on_delete=models.PROTECT, related_name='product_instance_ingredients')
+    ingredient = models.ForeignKey(Ingredients, on_delete=models.PROTECT, related_name='ingredient')
 
     class Meta:
         db_table = "ProductInstanceIngredients"
@@ -210,7 +210,7 @@ class ProductImages(BaseModel):
 
 class CartProductInstance(BaseModel):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='cart_product_instance')
-    product_instance = models.ForeignKey(ProductInstance, on_delete=models.CASCADE)
+    product_instance = models.ForeignKey(ProductInstance, on_delete=models.CASCADE, related_name='product_instance')
     is_current = models.BooleanField(default=True)
 
     class Meta:
