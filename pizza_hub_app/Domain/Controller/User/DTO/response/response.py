@@ -23,17 +23,28 @@ class UserResponseDTO(BaseModel):
 
 
 
-class ProductInstance(BaseModel):
+
+
+class IngredientModel(BaseModel):
+    id : UUID
+    name : str
+    price : float
+    
+
+class ProductInstanceModel(BaseModel):
     id : UUID
     product_id : UUID
     total_price : int
+    product_name : str
+    product_price : float
+    ingredients : List[Optional[IngredientModel]]
     created_at: datetime
     updated_at: datetime
 
-
 class CartModel(BaseModel):
     id : UUID
-    product_instances : List[ProductInstance]
+    product_instances : List[ProductInstanceModel]
+    quantity : int
     created_at: datetime
     updated_at: datetime
 

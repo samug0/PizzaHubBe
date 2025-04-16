@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import EmailStr
 
-from pizza_hub_app.models import CartProductInstance, ProductInstance, ProductInstanceIngredients, User, Cart
+from pizza_hub_app.models import CartProductInstance, Ingredients, ProductInstance, ProductInstanceIngredients, User, Cart
 from pizza_hub_app.Domain.Repository.generic_repository import GenericRepository
 from fastapi.exceptions import HTTPException
 from django.db.models import Q, Prefetch
@@ -15,7 +15,7 @@ prefetched_chart = Prefetch(('cart'), queryset=Cart.objects.all(), to_attr='cart
 prefetched_cart_product_instance = Prefetch(('cart_product_instance'), queryset=CartProductInstance.objects.filter(is_current=True), to_attr='cart_product_instances')
 prefetched_product_instances = Prefetch(('product_instance'), queryset=ProductInstance.objects.all(), to_attr='product_instances')
 prefetched_product_instances_ingredients = Prefetch(('product_instance_ingredients'), queryset=ProductInstanceIngredients.objects.all(), to_attr='product_instances_ingredients')
-prefetched_related_ingredients = Prefetch(('ingredient'), queryset=ProductInstanceIngredients.objects.all(), to_attr='ingredients')
+prefetched_related_ingredients = Prefetch(('ingredient'), queryset=Ingredients.objects.all(), to_attr='ingredients')
 
 class UserRepository(GenericRepository[User]):
 
@@ -25,7 +25,6 @@ class UserRepository(GenericRepository[User]):
             #print(user_prefetched.cart.id)
             cart =  await asyncio.get_running_loop().run_in_executor(None, lambda: user_prefetched.cart)
             cart_product_instance_prefetched = await Cart.objects.prefetch_related(prefetched_cart_product_instance).aget(pk=cart.id)
-            product_instances_ingredients : List[ProductInstanceIngredients] = []
             product_instances_ingredients_prefetched = []
             product_instances : List[ProductInstance] = []
             for i in cart_product_instance_prefetched.cart_product_instances:
@@ -34,17 +33,9 @@ class UserRepository(GenericRepository[User]):
 
             for i in product_instances:
                 product_instance_id = await asyncio.get_running_loop().run_in_executor(None, lambda: i.id)
-                prefetched_product_instance = await ProductInstance.objects.prefetch_related(prefetched_product_instances_ingredients).aget(pk=product_instance_id)
+                prefetched_product_instance : List[ProductInstance] = await ProductInstance.objects.prefetch_related(prefetched_product_instances_ingredients).aget(pk=product_instance_id)
                 product_instances_ingredients_prefetched.append(prefetched_product_instance)
-
-
-            # for i in product_instances_ingredients_prefetched:
-            #     for j in i.product_instances_ingredients:
-            #         product_instances_ingredients.append(j)
-            
-            # for i in product_instances_ingredients:
-            #     ingredient : ProductInstanceIngredients = await asyncio.get_running_loop().run_in_executor(None, lambda: i.ingredient)
-            user_aggregated = await convert_user_aggregated(user_prefetched, product_instances, None)
+            user_aggregated = await convert_user_aggregated(user_prefetched, product_instances, product_instances_ingredients_prefetched)
             #print(user_aggregated)
             return user_aggregated
         except User.DoesNotExist:
