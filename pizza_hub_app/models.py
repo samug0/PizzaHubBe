@@ -52,6 +52,16 @@ class Role(BaseModel):
     def __str__(self) -> str:
         return f'Ruole "{self.name}"'
 
+class Cart(BaseModel):
+    pass
+
+    class Meta:
+        db_table = "Carts"
+        verbose_name_plural = "Carrelli"
+
+    def __str__(self) -> str:
+        return f'Carrello Utente ID:"{self.pk}"'
+
 
 class User(BaseModel):
     name = models.CharField(max_length=30, null=True, blank=True)
@@ -70,6 +80,7 @@ class User(BaseModel):
     email_verified_at = models.DateTimeField(null=True, blank=True)
     phone_verified_at = models.DateTimeField(null=True, blank=True)
     role = models.ForeignKey(Role, on_delete=models.CASCADE)
+    cart = models.OneToOneField(Cart, on_delete=models.PROTECT, null=True, blank=None)
 
     def save(self, *args, **kwargs):
         self.password = make_password(self.password)
@@ -95,19 +106,6 @@ class BlackListToken(BaseModel):
 
     def __str__(self) -> str:
         return f'Token Utente "{self.user.email}"'
-
-
-
-
-class Cart(BaseModel):
-    user = models.OneToOneField(User, on_delete=models.PROTECT)
-
-    class Meta:
-        db_table = "Carts"
-        verbose_name_plural = "Carrelli"
-
-    def __str__(self) -> str:
-        return f'Carrello Utente "{self.user.email}"'
 
 
 
@@ -171,7 +169,6 @@ class Order(BaseModel):
 
 class ProductInstance(BaseModel):
     product = models.ForeignKey(Product, on_delete=models.PROTECT)
-    order = models.ForeignKey(Order, on_delete=models.PROTECT)
     total_price = models.FloatField()
 
     class Meta:
@@ -179,12 +176,16 @@ class ProductInstance(BaseModel):
         verbose_name_plural = "Istanze Prodotti"
 
     def __str__(self) -> str:
-        return f'Istanza prodotto ordine"{self.order.id}"'
+        return f'Istanza prodotto" {self.product.name}"'
+    
+class OrderProduct(BaseModel):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    product_instance = models.ForeignKey(ProductInstance, on_delete=models.CASCADE)
 
 
 class ProductInstanceIngredients(BaseModel):
-    product_instance = models.ForeignKey(ProductInstance, on_delete=models.CASCADE)
-    ingredient = models.ForeignKey(Ingredients, on_delete=models.CASCADE)
+    product_instance = models.ForeignKey(ProductInstance, on_delete=models.PROTECT)
+    ingredient = models.ForeignKey(Ingredients, on_delete=models.PROTECT)
 
     class Meta:
         db_table = "ProductInstanceIngredients"
@@ -208,8 +209,9 @@ class ProductImages(BaseModel):
 
 
 class CartProductInstance(BaseModel):
-    cart = models.ForeignKey(Cart, on_delete=models.CASCADE)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='cart_product_instance')
     product_instance = models.ForeignKey(ProductInstance, on_delete=models.CASCADE)
+    is_current = models.BooleanField(default=True)
 
     class Meta:
         db_table = "CartProductInstances"

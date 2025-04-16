@@ -3,7 +3,7 @@ from uuid import UUID
 
 from pydantic import EmailStr
 
-from pizza_hub_app.Domain.Controller.User.DTO.response.response import UserResponseDTO
+from pizza_hub_app.Domain.Controller.User.DTO.response.response import UserAggregatedResponseDTO, UserResponseDTO
 from pizza_hub_app.Domain.Controller.User.DTO.request.request import UpdateUserRequestDTO
 from pizza_hub_app.Domain.Service.abstract_service import AbstractService
 from pizza_hub_app.utils.logger.logger import AppLogger
@@ -21,6 +21,10 @@ class UserService(AbstractService):
         users = await self.repository_accessor.user_repository.get_all()
         return [UserResponseDTO(**user.__dict__) for user in users]
     
+    async def get_aggregated_user_by_id(self, id : UUID)-> Optional[UserAggregatedResponseDTO]:
+        user = await self.repository_accessor.user_repository.get_user_aggregated_by_id(id)
+        return UserAggregatedResponseDTO(**user)
+
     async def get_user_by_email(self, email : EmailStr) -> Optional[User]:
         return await self.repository_accessor.user_repository.get_by_email(email)
     

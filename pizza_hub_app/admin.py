@@ -1,5 +1,5 @@
 from django.contrib import admin
-from pizza_hub_app.models import Product, User, Role, BlackListToken, ProductImages, Ingredients, ProductIngredients, Category, ProductCategory
+from pizza_hub_app.models import Product, ProductInstanceIngredients, User, Role, BlackListToken, ProductImages, Ingredients, ProductIngredients, Category, ProductCategory, Cart, CartProductInstance, ProductInstance, OrderProduct
 
 
 #Registration of User Entity
@@ -7,7 +7,7 @@ from pizza_hub_app.models import Product, User, Role, BlackListToken, ProductIma
 class UserAdmin(admin.ModelAdmin):
     list_display = [
         "name", "last_name", "email", "username", "phone_number",
-        "country", "address", "city", "status", "profile_image", "email_verified_at",
+        "country", "address", "city", "status", "profile_image","cart", "email_verified_at",
         "phone_verified_at"
     ]
     list_per_page = 20
@@ -76,5 +76,35 @@ class CategoryAdmin(admin.ModelAdmin):
 @admin.register(ProductCategory)
 class ProductCategoryAdmin(admin.ModelAdmin):
     list_display = ["product", "category"]
+    list_per_page = 20
+    readonly_fields = ["id", "created_at", "updated_at"]
+
+@admin.register(Cart)
+class CartAdmin(admin.ModelAdmin):
+    list_per_page = 20
+    readonly_fields = ["id", "created_at", "updated_at"]
+
+@admin.register(CartProductInstance)
+class CardProductInstanceAdmin(admin.ModelAdmin):
+    list_display = ["cart", "is_current", "product_instance"]
+    list_per_page = 20
+    readonly_fields = ["id", "created_at", "updated_at"]
+
+@admin.register(ProductInstance)
+class ProductInstanceAdmin(admin.ModelAdmin):
+    list_display = ["product", "total_price"]
+    list_per_page = 20
+    readonly_fields = ["id", "created_at", "updated_at"]
+
+@admin.register(ProductInstanceIngredients)
+class ProductInstanceIngredientsAdmin(admin.ModelAdmin):
+    list_display = ["product_instance", "ingredient"]
+    list_per_page = 20
+    readonly_fields = ["id", "created_at", "updated_at"]
+
+
+@admin.register(OrderProduct)
+class OrderProductInstance(admin.ModelAdmin):
+    list_display = ["product_instance", "order"]
     list_per_page = 20
     readonly_fields = ["id", "created_at", "updated_at"]

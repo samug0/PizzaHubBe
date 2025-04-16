@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 
 from pizza_hub_app.Domain.Controller.Auth.guard.auth_guard import AuthGuard
 from pizza_hub_app.Domain.Controller.User.DTO.request.request import UpdateUserRequestDTO
-from pizza_hub_app.Domain.Controller.User.DTO.response.response import UserResponseDTO
+from pizza_hub_app.Domain.Controller.User.DTO.response.response import UserAggregatedResponseDTO, UserResponseDTO
 from pizza_hub_app.Domain.Controller.abstract_controller import AbstractController
 from pizza_hub_app.Domain.Service.User.service import UserService
 from pizza_hub_app.utils.logger.logger import AppLogger
@@ -25,7 +25,7 @@ class UserController(AbstractController):
 
     def configure_routes(self):
         self.__router.get("", status_code=200, response_model=List[UserResponseDTO],  dependencies=[Depends(AuthGuard(['ADMIN']))])(self.get_all_users)
-        self.__router.get("{id}", status_code=200, response_model=UserResponseDTO,  dependencies=[Depends(AuthGuard(['ADMIN', 'USER']))])(self.get_user_by_id)
+        self.__router.get("/{id}", status_code=200, response_model=UserAggregatedResponseDTO)(self.get_user_by_id)
         self.__router.patch("{id}", status_code=201, response_model=Mapping[str, bool], dependencies=[Depends(AuthGuard(['ADMIN', 'USER']))])(self.update_user_by_id)
         
 
@@ -39,7 +39,7 @@ class UserController(AbstractController):
 
     async def get_user_by_id(self, id : UUID):
         async def action():
-            user : Optional[UserResponseDTO] = await self.__user_service.get_user_by_id(id)
+            user : Optional[UserAggregatedResponseDTO] = await self.__user_service.get_aggregated_user_by_id(id)
             return user
         
         return await self.execute_action(action)
