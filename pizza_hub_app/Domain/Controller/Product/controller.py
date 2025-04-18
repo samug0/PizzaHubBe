@@ -30,7 +30,6 @@ class ProductController(AbstractController):
     async def get_product_by_id(self, id : UUID):
         async def action():
             product : Optional[ProductResponseDTO] = await self.__product_service.get_product_by_id(id)
-            print('ciao')
             return product
         return await self.execute_action(action)
 
