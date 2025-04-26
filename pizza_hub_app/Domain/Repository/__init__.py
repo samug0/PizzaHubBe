@@ -1,3 +1,4 @@
+from pizza_hub_app.Domain.Repository.Ingredient.repository import IngredientRepository, Ingredients
 from pizza_hub_app.Domain.Repository.Category.repository import CategoryRepository, Category
 from pizza_hub_app.Domain.Repository.Product.repository import ProductRepository, Product
 from pizza_hub_app.Domain.Repository.User.repository import UserRepository, User
@@ -12,3 +13,4 @@ class RepositoryAccessor:
         self.product_repository = ProductRepository(model=Product)
         self.category_repository = CategoryRepository(model=Category)
         self.product_instance_repository = ProductInstanceRepository(model=ProductInstance)
+        self.ingredient_repository = IngredientRepository(model=Ingredients)
