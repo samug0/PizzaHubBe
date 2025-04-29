@@ -1,0 +1,5 @@
+from pizza_hub_app.Domain.Repository.generic_repository import GenericRepository
+from pizza_hub_app.models import ProductInstanceIngredients
+
+class ProductInstanceIngredientRepository(GenericRepository[ProductInstanceIngredients]):
+    pass

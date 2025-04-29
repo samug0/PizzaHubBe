@@ -4,6 +4,7 @@ from pizza_hub_app.Domain.Repository.Product.repository import ProductRepository
 from pizza_hub_app.Domain.Repository.User.repository import UserRepository, User
 from pizza_hub_app.Domain.Repository.BlackList.repository import BlackListTokenRepository, BlackListToken
 from pizza_hub_app.Domain.Repository.ProductInstance.repository import ProductInstanceRepository, ProductInstance
+from pizza_hub_app.Domain.Repository.ProductInstanceIngredient.repository import ProductInstanceIngredientRepository, ProductInstanceIngredients
 
 
 class RepositoryAccessor:
@@ -14,3 +15,4 @@ class RepositoryAccessor:
         self.category_repository = CategoryRepository(model=Category)
         self.product_instance_repository = ProductInstanceRepository(model=ProductInstance)
         self.ingredient_repository = IngredientRepository(model=Ingredients)
+        self.product_ingredients_instance = ProductInstanceIngredientRepository(model=ProductInstanceIngredients)

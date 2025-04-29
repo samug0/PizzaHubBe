@@ -3,7 +3,9 @@ from uuid import UUID
 from pydantic import BaseModel
 
 
+
+
 class CreateProductInstanceRequestDTO(BaseModel):
     user_id : UUID
     product_id : UUID
-    ingredients : Optional[List[UUID]] = None
+    ingredients : List[Optional[dict]] | None = None
