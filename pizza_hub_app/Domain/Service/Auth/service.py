@@ -199,7 +199,6 @@ class AuthService(AbstractService):
         validated_data : dict = ResetPasswordRequestDTO(**request.model_dump()).__dict__
         user = await self.__black_list_service.get_user_by_token(validated_data.get('token'))
         if user:
-            print(validated_data.get('password'))
             user.password = validated_data.get('password')
             await user.asave()
             await self.__black_list_service.revoke_all_valid_user_token_by_user_id(user.id)

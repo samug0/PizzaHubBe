@@ -18,14 +18,14 @@ class ProductInstanceService(AbstractService):
       user = await self.repository_accessor.user_repository.get_by_id(validated_data.get('user_id'))
       product = await self.repository_accessor.product_repository.get_by_id(validated_data.get('product_id'))
       ingredients = []
-      if len(validated_data.get('ingredients')) > 0:
+      if validated_data.get('ingredients') is not None and len(validated_data.get('ingredients')) > 0:
         for i in validated_data.get('ingredients'):
           ingredient = await self.repository_accessor.ingredient_repository.get_by_id(i['id'])
           ingredients.append({"ingredient": ingredient, "quantity": i.get('quantity')})
-        if(user and product and ingredients):
+        if user and product and ingredients:
           return await self.repository_accessor.product_instance_repository.create_and_associate_service_instance_to_cart(product, user, ingredients)
       else:
-        if(user and product):
+        if user and product:
           return await self.repository_accessor.product_instance_repository.create_and_associate_service_instance_to_cart(product, user)
     except ObjectDoesNotExist:
       raise ObjectDoesNotExist()
