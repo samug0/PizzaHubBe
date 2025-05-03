@@ -22,7 +22,7 @@ class UserRepository(GenericRepository[User]):
     async def get_user_aggregated_by_id(self, id : UUID):
         try:
             user_prefetched = await User.objects.prefetch_related(prefetched_chart).aget(pk=id)
-            #print(user_prefetched.cart.id)
+            
             cart =  await asyncio.get_running_loop().run_in_executor(None, lambda: user_prefetched.cart)
             cart_product_instance_prefetched = await Cart.objects.prefetch_related(prefetched_cart_product_instance).aget(pk=cart.id)
             product_instances_ingredients_prefetched = []
@@ -36,7 +36,7 @@ class UserRepository(GenericRepository[User]):
                 prefetched_product_instance : List[ProductInstance] = await ProductInstance.objects.prefetch_related(prefetched_product_instances_ingredients).aget(pk=product_instance_id)
                 product_instances_ingredients_prefetched.append(prefetched_product_instance)
             user_aggregated = await convert_user_aggregated(user_prefetched, product_instances, product_instances_ingredients_prefetched)
-            #print(user_aggregated)
+          
             return user_aggregated
         except User.DoesNotExist:
             return None
