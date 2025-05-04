@@ -18,8 +18,8 @@ class CartService(AbstractService):
 
 
 
-    async def get_cart_by_user_id(self, id : UUID) -> CartResponseDTO:
+    async def get_cart_by_user_id(self, id : UUID) -> dict:
         user : User = await self.repository_accessor.user_repository.get_by_id(id)
         cart : Cart = await asyncio.get_running_loop().run_in_executor(None, lambda: user.cart)
         aggregated_cart: dict= await self.repository_accessor.cart_repository.get_aggregated_cart(cart)
-        return CartResponseDTO(**aggregated_cart)
+        return aggregated_cart

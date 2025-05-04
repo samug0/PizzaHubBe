@@ -6,6 +6,7 @@ import uuid
 
 from pydantic import EmailStr
 
+from pizza_hub_app.Domain.Service.Cart.service import CartService
 from pizza_hub_app.Domain.Controller.SumUp.DTO.request.request import CreatePaymentIntentRequestDTO
 from pizza_hub_app.Domain.Controller.SumUp.DTO.response.response import CreatePaymentIntentResponseDTO
 from pizza_hub_app.Domain.Controller.User.DTO.response.response import UserAggregatedResponseDTO, UserResponseDTO
@@ -13,9 +14,8 @@ from pizza_hub_app.Domain.Controller.User.DTO.request.request import UpdateUserR
 from pizza_hub_app.Domain.Service.User.service import UserService
 from pizza_hub_app.Domain.Service.abstract_service import AbstractService
 from pizza_hub_app.utils.logger.logger import AppLogger
-from pizza_hub_app.models import User
-from fastapi.exceptions import HTTPException
 import requests
+from datetime import datetime, timedelta, timezone
 
 logger = AppLogger(__name__)
 
@@ -25,6 +25,7 @@ class SumUpService(AbstractService):
     def __init__(self):
         super().__init__()
         self.__user_service = UserService()
+        self.__cart_service = CartService()
 
     async def create_paymnet_intent(self, req : CreatePaymentIntentRequestDTO, merchant_code : str) -> CreatePaymentIntentResponseDTO:
         validated_data : dict = CreatePaymentIntentRequestDTO(**req.model_dump()).__dict__
@@ -35,21 +36,38 @@ class SumUpService(AbstractService):
             "Content-Type": "application/json"
         }
         reference = str(uuid.uuid4())
+        cart_user = await self.__cart_service.get_cart_by_user_id(user.id)
+        product_instances = cart_user.get('product_instances')
+        #print('Count totale degli item', len(product_instances))
+        updated_dict_product = []
+        for i in product_instances:
+            del i['id']
+            if i not in updated_dict_product:
+                updated_dict_product.append(i)
+        
+        now = datetime.now(timezone.utc)
+        future_time = now + timedelta(minutes=5)
+        iso_string = future_time.replace(microsecond=0).isoformat()
         data : dict = {
             "checkout_reference": reference,
             "merchant_code": merchant_code,
-            "amount": 25.00,
-            "currency": "EUR"
+            "amount": cart_user.get('total'),
+            #"amount": 0.10,
+            "currency": "EUR",
+            "hosted_checkout": { "enabled": True },
+            "return_url": "http://localhost:3000/menu",
+            #"customer_id": str(user.id),
+            "description": f'Quantità : {len(product_instances)}',
+            "valid_until": iso_string
         }
-        url_checkout_link = f"https://api.sumup.com/v0.1/checkouts/{reference}"
-
         response_checkout = requests.post(url_create_checkout, headers=headers, json=data)
         print(response_checkout.json())
         if response_checkout and response_checkout.status_code == 201:
             dict_response: dict = response_checkout.json()
-            checkout_reference = dict_response.get('checkout_reference')
+            #print(dict_response)
+            checkout_url: str = dict_response.get('hosted_checkout_url')
+            return CreatePaymentIntentResponseDTO(**{"payment_url": checkout_url})
+    
 
-            # Costruisci manualmente l'URL del checkout
-            payment_url = f"https://checkout.sumup.com/{checkout_reference}"
-
-            print(f"Link per il pagamento: {payment_url}")
+    async def validate_checkout_payment(self, payload_signature : str) -> bool:
+        print('ciaop')

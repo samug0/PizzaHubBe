@@ -4,6 +4,7 @@ import json
 import time
 from typing import List, Optional
 from fastapi import Request
+import requests
 from pizza_hub_app.Domain.Service.BlackListToken.service import BlackListTokenService
 from pizza_hub_app.Domain.Service.abstract_service import AbstractService
 from pizza_hub_app.Domain.Controller.Auth.DTO.request.request import SignInRequestDTO, SignUpRequestDTO, SignOutRequestDTO, RefreshRequestDTO, ForgotPasswordRequestDTO, ResetPasswordRequestDTO
@@ -67,6 +68,11 @@ class AuthService(AbstractService):
 
     async def sign_up(self, req: SignUpRequestDTO):
         validated_data : dict = SignUpRequestDTO(**req.model_dump()).__dict__
+        sum_up_url_create_customer = 'https://api.sumup.com/v0.1/customers'
+        headers : dict = {
+            "Authorization": "Bearer sup_sk_MDJyKEl48k86t8FzdVWTzFZt0Gfkn1oWF",
+            "Content-Type": "application/json"
+        }
         user_found_email = await self.__user_service.get_user_by_email(validated_data.get('email'))
         if user_found_email:
             raise HTTPException(409, 'Email already registered')
@@ -75,8 +81,17 @@ class AuthService(AbstractService):
             raise HTTPException(409, 'Username already registered')
         role_user : Role = await Role.objects.aget(name=RoleType.USER)
         validated_data['role_id'] = role_user.id
-        response = True if await self.repository_accessor.user_repository.create(validated_data) else False
-        if response == True:
+        created_user = await self.repository_accessor.user_repository.create(validated_data)
+        data : dict = {
+            "customer_id": str(created_user.id),
+            "personal_details": {
+                "first_name": created_user.name,
+                "last_name": created_user.last_name,
+                "email": created_user.email
+            }
+        }
+        response_create_customer_sumup = requests.post(sum_up_url_create_customer, headers=headers, json=data)
+        if response_create_customer_sumup.status_code == 201:
             return True
     
     @sync_to_async

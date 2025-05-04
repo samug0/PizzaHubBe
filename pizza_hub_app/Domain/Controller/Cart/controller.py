@@ -26,7 +26,7 @@ class CartController(AbstractController):
 
     async def get_cart_by_user_id(self, id : UUID):
         async def action():
-            cart : CartResponseDTO = await self.__cart_service.get_cart_by_user_id(id)
-            return cart
+            cart : dict = await self.__cart_service.get_cart_by_user_id(id)
+            return CartResponseDTO(**cart)
 
         return await self.execute_action(action)

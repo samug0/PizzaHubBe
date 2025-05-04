@@ -2,4 +2,4 @@ from pydantic import BaseModel
 
 
 class CreatePaymentIntentResponseDTO(BaseModel):
-    client_secret : str
+    payment_url : str

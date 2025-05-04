@@ -6,7 +6,7 @@ from pizza_hub_app.Domain.Controller.ProductInstance.DTO.request.request import 
 from pizza_hub_app.Domain.Controller.SumUp.DTO.request.request import CreatePaymentIntentRequestDTO
 from pizza_hub_app.Domain.Controller.SumUp.DTO.response.response import CreatePaymentIntentResponseDTO
 from pizza_hub_app.Domain.Controller.abstract_controller import AbstractController
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from typing import Mapping
 from pizza_hub_app.Domain.Service.ProductInstance.service import ProductInstanceService
 from pizza_hub_app.Domain.Service.SumUp.service import SumUpService
@@ -37,9 +37,15 @@ class SumUpController(AbstractController):
             client = self.__client.merchant.get()
             dict_client: dict = client.__dict__
             merchant_code : str = dict_client.get('merchant_profile').__dict__.get('merchant_code')
-            client_secret_id: str = await self.__sum_up_service.create_paymnet_intent(request, merchant_code)
-            if client_secret_id:
-                return JSONResponse(content=client_secret_id)
-            else:
-                return self.success_response(False)
+            payment_url: str = await self.__sum_up_service.create_paymnet_intent(request, merchant_code)
+            if payment_url:
+                return payment_url
+        return await self.execute_action(action)
+    
+
+    async def validate_and_process_successfull_paymeny(self, request: Request):
+        async def action():
+            payload_signature : str = request.get('x-payload-signature')
+            
+
         return await self.execute_action(action)
