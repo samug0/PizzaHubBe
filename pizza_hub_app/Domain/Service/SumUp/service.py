@@ -4,8 +4,10 @@ from typing import List, Optional
 from uuid import UUID
 import uuid
 
+from fastapi import HTTPException
 from pydantic import EmailStr
 
+from pizza_hub_app.models import Order, OrderStatus
 from pizza_hub_app.Domain.Service.Cart.service import CartService
 from pizza_hub_app.Domain.Controller.SumUp.DTO.request.request import CreatePaymentIntentRequestDTO
 from pizza_hub_app.Domain.Controller.SumUp.DTO.response.response import CreatePaymentIntentResponseDTO
@@ -49,13 +51,13 @@ class SumUpService(AbstractService):
         future_time = now + timedelta(minutes=5)
         iso_string = future_time.replace(microsecond=0).isoformat()
         data : dict = {
-            "checkout_reference": reference,
+            "checkout_reference": str(user.id),
             "merchant_code": merchant_code,
             "amount": cart_user.get('total'),
             #"amount": 0.10,
             "currency": "EUR",
             "hosted_checkout": { "enabled": True },
-            "return_url": "http://localhost:3000/menu",
+            "return_url": "http://localhost:8001/sum-up/validate/checkout/payment",
             #"customer_id": str(user.id),
             "description": f'Quantità : {len(product_instances)}',
             "valid_until": iso_string
@@ -71,3 +73,31 @@ class SumUpService(AbstractService):
 
     async def validate_checkout_payment(self, payload_signature : str) -> bool:
         print('ciaop')
+    
+
+
+    async def get_payment_status_by_transaction_id(self, id : UUID) -> bool:
+        url: str = f'https://api.sumup.com/v0.1/checkouts/{id}'
+        headers : dict = {
+            "Authorization": "Bearer sup_sk_MDJyKEl48k86t8FzdVWTzFZt0Gfkn1oWF",
+            "Content-Type": "application/json"
+        }
+        response_get_checkout = requests.get(url, headers=headers)
+        if response_get_checkout.status_code == 200:
+            response_dict: dict = response_get_checkout.json()
+            if response_dict.get('status') == 'PAID' or response_dict.get('status') == 'SUCCESSFULL':
+                user = await self.__user_service.get_user_by_id(response_dict.get('checkout_reference'))
+                data_order : dict = {
+                    "user": user,
+                    "total": response_dict.get('amount'),
+                    "approved": True,
+                    "status": OrderStatus.APPROVED,
+                    "is_payed": True
+                }
+                await Order.objects.acreate(data_order)
+                return True
+                
+        elif response_get_checkout.status_code == 404:
+            raise HTTPException(404, 'Not found')
+        else:
+            raise HTTPException(400, 'An Error occured in process of checkout')
