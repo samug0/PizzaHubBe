@@ -7,7 +7,7 @@ import uuid
 from fastapi import HTTPException
 from pydantic import EmailStr
 
-from pizza_hub_app.models import Order, OrderStatus
+from pizza_hub_app.models import Order, OrderStatus, CartProductInstance, OrderProduct
 from pizza_hub_app.Domain.Service.Cart.service import CartService
 from pizza_hub_app.Domain.Controller.SumUp.DTO.request.request import CreatePaymentIntentRequestDTO
 from pizza_hub_app.Domain.Controller.SumUp.DTO.response.response import CreatePaymentIntentResponseDTO
@@ -94,10 +94,34 @@ class SumUpService(AbstractService):
                     "status": OrderStatus.APPROVED,
                     "is_payed": True
                 }
-                await Order.objects.acreate(data_order)
+                created_order = await Order.objects.acreate(data_order)
+                cart_products_instances = [i async for i in CartProductInstance.objects.filter(cart=user.cart, is_current=True)]
+                order_products : List = []
+                for i in cart_products_instances:
+                    i.is_current = False
+                    await i.asave()
+                    order_product = OrderProduct(order=created_order, product_instance=i.product_instance)
+                    order_products.append(order_product)
+                await OrderProduct.objects.abulk_create(order_products)
                 return True
                 
         elif response_get_checkout.status_code == 404:
+            raise HTTPException(404, 'Not found')
+        else:
+            raise HTTPException(400, 'An Error occured in process of checkout')
+    
+
+    async def reject_checkout_by_transaction_id(self, id : UUID) -> bool:
+        url: str = f'https://api.sumup.com/v0.1/checkouts/{id}'
+        headers : dict = {
+            "Authorization": "Bearer sup_sk_MDJyKEl48k86t8FzdVWTzFZt0Gfkn1oWF",
+            "Content-Type": "application/json"
+        }
+        response_revoke_checkout = requests.delete(url, headers=headers)
+        if response_revoke_checkout.status_code == 200:
+            print(response_revoke_checkout.json())
+            return True
+        elif response_revoke_checkout.status_code == 404:
             raise HTTPException(404, 'Not found')
         else:
             raise HTTPException(400, 'An Error occured in process of checkout')
