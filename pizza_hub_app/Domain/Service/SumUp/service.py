@@ -50,14 +50,15 @@ class SumUpService(AbstractService):
         now = datetime.now(timezone.utc)
         future_time = now + timedelta(minutes=5)
         iso_string = future_time.replace(microsecond=0).isoformat()
+        random_uuid : str = str(uuid.uuid4())
         data : dict = {
-            "checkout_reference": str(user.id),
+            "checkout_reference": random_uuid + '|' + str(user.id),
             "merchant_code": merchant_code,
-            "amount": cart_user.get('total'),
-            #"amount": 0.10,
+            #"amount": cart_user.get('total'),
+            "amount": 0.01,
             "currency": "EUR",
             "hosted_checkout": { "enabled": True },
-            "return_url": "http://localhost:8001/sum-up/validate/checkout/payment",
+            "return_url": "http://localhost:3000/validate",
             #"customer_id": str(user.id),
             "description": f'Quantità : {len(product_instances)}',
             "valid_until": iso_string
@@ -71,10 +72,6 @@ class SumUpService(AbstractService):
             return CreatePaymentIntentResponseDTO(**{"payment_url": checkout_url})
     
 
-    async def validate_checkout_payment(self, payload_signature : str) -> bool:
-        print('ciaop')
-    
-
 
     async def get_payment_status_by_transaction_id(self, id : UUID) -> bool:
         url: str = f'https://api.sumup.com/v0.1/checkouts/{id}'
@@ -85,8 +82,10 @@ class SumUpService(AbstractService):
         response_get_checkout = requests.get(url, headers=headers)
         if response_get_checkout.status_code == 200:
             response_dict: dict = response_get_checkout.json()
+            print(response_dict)
             if response_dict.get('status') == 'PAID' or response_dict.get('status') == 'SUCCESSFULL':
-                user = await self.__user_service.get_user_by_id(response_dict.get('checkout_reference'))
+                user_id = response_dict.get('checkout_reference').split('|')[1]
+                user = await self.__user_service.get_user_by_id(user_id)
                 data_order : dict = {
                     "user": user,
                     "total": response_dict.get('amount'),

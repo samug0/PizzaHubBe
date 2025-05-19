@@ -32,8 +32,8 @@ class SumUpController(AbstractController):
 
     def configure_routes(self):
         self.__router.post("/create-payment-intent", status_code=200, response_model=CreatePaymentIntentResponseDTO)(self.create_payment_intent)
-        self.__router.get("/validate/checkout/payment", status_code=200, response_model=Mapping[str, bool])(self.validate_and_process_successfull_payment)
         self.__router.delete("/reject/checkout/payment/{id}", status_code=200, response_model=Mapping[str, bool])(self.reject_checkot_by_transaction_id)
+        self.__router.get("/validate/payment/{id}", status_code=200, response_model=Mapping[str, bool])(self.get_payment_status_by_transaction_id)
 
 
     async def create_payment_intent(self, request: CreatePaymentIntentRequestDTO):
@@ -48,14 +48,6 @@ class SumUpController(AbstractController):
             payment_url: str = await self.__sum_up_service.create_paymnet_intent(request, merchant_code)
             if payment_url:
                 return payment_url
-        return await self.execute_action(action)
-    
-
-    async def validate_and_process_successfull_payment(self, request: Request):
-        async def action():
-            payload_signature : str = request.get('x-payload-signature')
-            print(payload_signature)
-            return self.success_response(True)
         return await self.execute_action(action)
 
 

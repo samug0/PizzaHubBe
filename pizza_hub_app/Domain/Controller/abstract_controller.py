@@ -7,6 +7,7 @@ from jose import JWTError
 from abc import ABC, abstractmethod
 from typing import Optional, TypeVar, Callable, Awaitable
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import HttpResponseForbidden
 from django.db.models.base import ModelBase
 from fastapi import Depends, HTTPException, Request, Security, status
 from fastapi.encoders import jsonable_encoder
@@ -98,15 +99,17 @@ class AbstractController(ABC):
                 )
                 raise self.not_found(e)
             
+            except HTTPException as e:
+                if e.status_code == 404:
+                    logger.error(f"Class '{self._get_class_name}' not found")
+                if e.status_code == 409:
+                    logger.error(f"Class '{self._get_class_name}' conflict error --> DETAIL {str(e)}")
+                    raise self.conflict(e)
             except Exception as e:
                 logger.critical(
                     f"Request Error not detected! Error occurred in class: {self._get_class_name()} --> DETAIL: {str(e)}"
                 )
                 raise self.internal_server_error(e)
-            except HTTPException as e:
-                print('si')
-                if e.status_code == 404:
-                    logger.error(f"Class '{self._get_class_name}' not found")
         return await wrapper()
 
     def _get_class_name(self):
